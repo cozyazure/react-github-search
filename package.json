@@ -4,8 +4,10 @@
   "private": true,
   "dependencies": {
     "react": "^16.0.0",
+    "react-autosuggest": "^9.3.2",
     "react-dom": "^16.0.0",
-    "react-scripts": "1.0.14"
+    "react-scripts": "1.0.14",
+    "redux-auth": "0.0.5-beta5"
   },
   "scripts": {
     "start": "react-scripts start",
