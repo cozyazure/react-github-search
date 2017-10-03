@@ -1,6 +1,11 @@
 import React from 'react';
 import Autosuggest from 'react-autosuggest';
 import './Searchbar.css';
+import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/delay';
+import 'rxjs/add/observable/if';
+import 'rxjs/add/operator/catch'
 
 const languages = [
     {
@@ -61,8 +66,9 @@ const languages = [
     }
 ];
 
-function getMatchingLanguages(value) {
-    const escapedValue = escapeRegexCharacters(value.trim());
+const retrieveMatchingSuggestions = (value) => {
+
+    const escapedValue = sanitizeInput(value.trim());
 
     if (escapedValue === '') {
         return [];
@@ -71,52 +77,58 @@ function getMatchingLanguages(value) {
     const regex = new RegExp('^' + escapedValue, 'i');
 
     return languages.filter(language => regex.test(language.name));
-}
+};
 
-function escapeRegexCharacters(str) {
+const sanitizeInput = (str) => {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+};
 
-function getSuggestionValue(suggestion) {
+const getSuggestionValue = (suggestion) => {
     return suggestion.name;
-}
+};
 
-function renderSuggestion(suggestion) {
+const renderSuggestion = (suggestion) => {
     return (
         <span>{suggestion.name}</span>
     );
-}
+};
 
 class Searchbar extends React.Component {
     constructor() {
         super();
-
         this.state = {
             value: '',
             suggestions: [],
-            isLoading: false
+            isLoading: false,
+            errorMessage: "",
         };
-
-        this.lastRequestId = null;
     }
 
     loadSuggestions(value) {
-        // Cancel the previous request
-        if (this.lastRequestId !== null) {
-            clearTimeout(this.lastRequestId);
-        }
-
         this.setState({
             isLoading: true
         });
-
-        // Fake request
-        this.lastRequestId = setTimeout(() => {
-            this.setState({
-                isLoading: false,
-                suggestions: getMatchingLanguages(value)
+        Observable
+            .if(() => retrieveMatchingSuggestions(value).length,
+                Observable.of(retrieveMatchingSuggestions(value)),
+                Observable.of([{
+                    name: 'Not found',
+                    year: 1972
+                }]).delay(2000))
+            .subscribe(values => {
+                this.setState({
+                    isLoading: false,
+                    suggestions: values,
+                    errorMessage: "LOL"
+                });
+            })
+            .catch(error => {
+                this.setState({
+                    isLoading: false,
+                    suggestions: [],
+                    errorMessage: error.errorMessage
+                })
             });
-        }, 1000);
     }
 
     onChange = (event, {newValue}) => {
@@ -142,11 +154,10 @@ class Searchbar extends React.Component {
             value,
             onChange: this.onChange
         };
-        const status = (isLoading ? 'Loading...' : 'Type to load suggestions:');
+        const status = (isLoading ? 'Fetching some juice...' : 'Type to search:');
 
         return (
             <div className="container">
-
                 <div className="row">
                     <div className="two columns">&nbsp;</div>
                     <div className="eight columns">
@@ -160,6 +171,8 @@ class Searchbar extends React.Component {
                             getSuggestionValue={getSuggestionValue}
                             renderSuggestion={renderSuggestion}
                             inputProps={inputProps}/>
+                        <div className="error">{this.state.errorMessage}</div>
+
                     </div>
                     <div className="two columns">&nbsp;</div>
                 </div>
