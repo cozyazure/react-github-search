@@ -3,68 +3,10 @@ import Autosuggest from 'react-autosuggest';
 import './Searchbar.css';
 import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/delay';
-import 'rxjs/add/observable/if';
-import 'rxjs/add/operator/catch'
+import 'rxjs/add/operator/switchMap';
+import {search} from "../../services/search.service";
+import DataBank from "../../services/initial-data";
 
-const languages = [
-    {
-        name: 'C',
-        year: 1972
-    },
-    {
-        name: 'C#',
-        year: 2000
-    },
-    {
-        name: 'C++',
-        year: 1983
-    },
-    {
-        name: 'Clojure',
-        year: 2007
-    },
-    {
-        name: 'Elm',
-        year: 2012
-    },
-    {
-        name: 'Go',
-        year: 2009
-    },
-    {
-        name: 'Haskell',
-        year: 1990
-    },
-    {
-        name: 'Java',
-        year: 1995
-    },
-    {
-        name: 'Javascript',
-        year: 1995
-    },
-    {
-        name: 'Perl',
-        year: 1987
-    },
-    {
-        name: 'PHP',
-        year: 1995
-    },
-    {
-        name: 'Python',
-        year: 1991
-    },
-    {
-        name: 'Ruby',
-        year: 1995
-    },
-    {
-        name: 'Scala',
-        year: 2003
-    }
-];
 
 const retrieveMatchingSuggestions = (value) => {
 
@@ -76,7 +18,7 @@ const retrieveMatchingSuggestions = (value) => {
 
     const regex = new RegExp('^' + escapedValue, 'i');
 
-    return languages.filter(language => regex.test(language.name));
+    return DataBank.users.filter(user => regex.test(user.login));
 };
 
 const sanitizeInput = (str) => {
@@ -84,12 +26,12 @@ const sanitizeInput = (str) => {
 };
 
 const getSuggestionValue = (suggestion) => {
-    return suggestion.name;
+    return suggestion.login;
 };
 
 const renderSuggestion = (suggestion) => {
     return (
-        <span>{suggestion.name}</span>
+        <span>{suggestion.login}</span>
     );
 };
 
@@ -100,7 +42,7 @@ class Searchbar extends React.Component {
             value: '',
             suggestions: [],
             isLoading: false,
-            errorMessage: "",
+            error: "",
         };
     }
 
@@ -108,27 +50,16 @@ class Searchbar extends React.Component {
         this.setState({
             isLoading: true
         });
-        Observable
-            .if(() => retrieveMatchingSuggestions(value).length,
-                Observable.of(retrieveMatchingSuggestions(value)),
-                Observable.of([{
-                    name: 'Not found',
-                    year: 1972
-                }]).delay(2000))
-            .subscribe(values => {
+        Observable.of(retrieveMatchingSuggestions(value))
+            .switchMap(filtered => filtered.length ? Observable.of(filtered) : search(value))
+            .subscribe(result => {
                 this.setState({
                     isLoading: false,
-                    suggestions: values,
-                    errorMessage: "LOL"
+                    suggestions: result.status === 403 ? [] : retrieveMatchingSuggestions(value),
+                    error: result.status === 403 ? 'Rate Limit Exceeded' : ''
                 });
             })
-            .catch(error => {
-                this.setState({
-                    isLoading: false,
-                    suggestions: [],
-                    errorMessage: error.errorMessage
-                })
-            });
+        ;
     }
 
     onChange = (event, {newValue}) => {
@@ -148,16 +79,17 @@ class Searchbar extends React.Component {
     };
 
     render() {
-        const {value, suggestions, isLoading} = this.state;
+        const {value, suggestions, isLoading, error} = this.state;
         const inputProps = {
-            placeholder: "Type 'c'",
+            placeholder: "Type to search..",
             value,
-            onChange: this.onChange
+            onChange: this.onChange,
+            disabled: !!error
         };
-        const status = (isLoading ? 'Fetching some juice...' : 'Type to search:');
+        const status = (isLoading ? 'Fetching some juice...' : ' ');
 
         return (
-            <div className="container">
+            <div className="container" style={{marginTop: '1em'}}>
                 <div className="row">
                     <div className="two columns">&nbsp;</div>
                     <div className="eight columns">
@@ -171,7 +103,7 @@ class Searchbar extends React.Component {
                             getSuggestionValue={getSuggestionValue}
                             renderSuggestion={renderSuggestion}
                             inputProps={inputProps}/>
-                        <div className="error">{this.state.errorMessage}</div>
+                        <div className="error">{this.state.error}</div>
 
                     </div>
                     <div className="two columns">&nbsp;</div>
