@@ -1,5 +1,5 @@
 .status {
-    min-height:24px;
+    min-height: 24px;
 }
 
 .react-autosuggest__container {
@@ -44,6 +44,10 @@
     z-index: 2;
 }
 
+.react-autosuggest__suggestions-container__avatar {
+
+}
+
 .react-autosuggest__suggestions-list {
     margin: 0;
     padding: 0;
@@ -53,6 +57,15 @@
 .react-autosuggest__suggestion {
     cursor: pointer;
     padding: 10px 20px;
+}
+
+.react-autosuggest__suggestion__avatar {
+    vertical-align: middle;
+    width: 64px;
+}
+
+.react-autosuggest__suggestion__username {
+    margin-left: 1em;
 }
 
 .react-autosuggest__suggestion--highlighted {

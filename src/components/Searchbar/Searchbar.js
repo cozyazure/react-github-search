@@ -31,7 +31,10 @@ const getSuggestionValue = (suggestion) => {
 
 const renderSuggestion = (suggestion) => {
     return (
-        <span>{suggestion.login}</span>
+        <div>
+            <img className="react-autosuggest__suggestion__avatar" src={`${suggestion.avatar_url}`} alt=""/>
+            <span className="react-autosuggest__suggestion__username">{suggestion.login}</span>
+        </div>
     );
 };
 
