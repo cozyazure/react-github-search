@@ -6,17 +6,29 @@ import 'rxjs/add/observable/of';
 import request from 'superagent';
 import observify from 'superagent-rxjs';
 import DataBank from "./initial-data";
+import {dedupeArray} from "./helper";
 
 const GITHUB_URL = "https://api.github.com/search/users";
 
 observify(request);
 export const search = (query) => {
     return request.get(`${GITHUB_URL}?q=${query}`).observify()
-        .map(serverResponse => {
+        .do(serverResponse => {
             let results = serverResponse.body;
-            let destructured = results.items.map(item => ({login: item.login, avatar_url: item.avatar_url}));
-            return DataBank.users = [...new Set([...destructured, ...DataBank.users])];
+            let concat = DataBank.users.concat(results.items.map(item => ({
+                login: item.login,
+                avatar_url: item.avatar_url
+            })));
+            DataBank.users = dedupeArray(concat,"login");
         })
-        .catch(error=>Observable.of(error));
+        .map(serverResponse => {
+            return {
+                rateLimit: {
+                    count: serverResponse.headers["x-ratelimit-remaining"],
+                    resetTimer: serverResponse.headers["x-ratelimit-reset"],
+                }
+            }
+        })
+        .catch(error => Observable.of(error));
 
 };

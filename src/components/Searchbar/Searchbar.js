@@ -3,7 +3,9 @@ import Autosuggest from 'react-autosuggest';
 import './Searchbar.css';
 import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/switchMap';
+import 'rxjs/add/observable/interval';
 import {search} from "../../services/search.service";
 import DataBank from "../../services/initial-data";
 
@@ -38,6 +40,7 @@ const renderSuggestion = (suggestion) => {
     );
 };
 
+
 class Searchbar extends React.Component {
     constructor() {
         super();
@@ -46,7 +49,24 @@ class Searchbar extends React.Component {
             suggestions: [],
             isLoading: false,
             error: "",
+            rateLimit: {
+                count: 10,
+                resetTimer: 0,
+                timeRemainingToReset: 0
+            }
         };
+        setInterval(() => {
+            let timeLeft = new Date(parseInt(this.state.rateLimit.resetTimer) * 1000) - Date.now();
+            this.setState({
+                rateLimit: {
+                    ...this.state.rateLimit,
+                    timeRemainingToReset: (timeLeft > 0) ? Math.floor(timeLeft / 1000) : 60,
+                    count: ( timeLeft < 0) ? 10 : this.state.rateLimit.count
+                },
+                error: ( timeLeft < 0) ? '' : this.state.error
+            });
+        }, 1000)
+
     }
 
     loadSuggestions(value) {
@@ -56,11 +76,31 @@ class Searchbar extends React.Component {
         Observable.of(retrieveMatchingSuggestions(value))
             .switchMap(filtered => filtered.length ? Observable.of(filtered) : search(value))
             .subscribe(result => {
+                //set loading to false
+                this.setState({isLoading: false});
+
+                //results
                 this.setState({
-                    isLoading: false,
-                    suggestions: result.status === 403 ? [] : retrieveMatchingSuggestions(value),
-                    error: result.status === 403 ? 'Rate Limit Exceeded' : ''
+                    suggestions: retrieveMatchingSuggestions(value)
                 });
+
+                //results from server
+                if (result.rateLimit) {
+                    this.setState({rateLimit: Object.assign({}, {...this.state.rateLimit}, {...result.rateLimit})});
+                }
+
+                //error handling
+                if (result.status === 403) {
+                    this.setState({
+                        suggestions: [],
+                        error: 'Rate Limit Exceeded',
+                        rateLimit: {
+                            ...this.state.rateLimit,
+                            count: 0
+                        }
+                    });
+                }
+
             })
         ;
     }
@@ -82,12 +122,12 @@ class Searchbar extends React.Component {
     };
 
     render() {
-        const {value, suggestions, isLoading, error} = this.state;
+        const {value, suggestions, isLoading, rateLimit} = this.state;
         const inputProps = {
             placeholder: "Type to search..",
             value,
             onChange: this.onChange,
-            disabled: !!error
+            disabled: !(!!rateLimit.count)
         };
         const status = (isLoading ? 'Fetching some juice...' : ' ');
 
@@ -97,7 +137,10 @@ class Searchbar extends React.Component {
                     <div className="two columns">&nbsp;</div>
                     <div className="eight columns">
                         <div className="status">
-                            {status}
+                            <span>{status}</span>
+                            <span className="u-pull-right">Rate Limit: {this.state.rateLimit.count}</span>
+                            <span
+                                className="u-pull-right">Refresh Timer: {this.state.rateLimit.timeRemainingToReset}</span>
                         </div>
                         <Autosuggest
                             suggestions={suggestions}
