@@ -6,7 +6,7 @@ import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/observable/interval';
-import {search} from "../../services/search.service";
+import {searchUser} from "../../services/search.service";
 import DataBank from "../../services/databank";
 
 
@@ -74,7 +74,7 @@ class Searchbar extends React.Component {
             isLoading: true
         });
         Observable.of(retrieveMatchingSuggestions(value))
-            .switchMap(filtered => filtered.length ? Observable.of(filtered) : search(value))
+            .switchMap(filtered => filtered.length ? Observable.of(filtered) : searchUser(value))
             .subscribe(result => {
                 //set loading to false
                 this.setState({isLoading: false});
