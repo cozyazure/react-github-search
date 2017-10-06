@@ -129,7 +129,7 @@ class Searchbar extends React.Component {
             onChange: this.onChange,
             disabled: !(!!rateLimit.count)
         };
-        const status = (isLoading ? 'Fetching some juice...' : ' ');
+        const status = (isLoading ? 'Fetching some juice...' : '');
 
         return (
             <div className="container" style={{marginTop: '1em'}}>

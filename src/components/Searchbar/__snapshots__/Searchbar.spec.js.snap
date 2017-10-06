@@ -1,0 +1,81 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Should render searchbar properly 1`] = `
+<div
+  className="container"
+  style={
+    Object {
+      "marginTop": "1em",
+    }
+  }
+>
+  <div
+    className="row"
+  >
+    <div
+      className="two columns"
+    >
+       
+    </div>
+    <div
+      className="eight columns"
+    >
+      <div
+        className="status"
+      >
+        <span>
+          
+        </span>
+        <span
+          className="u-pull-right"
+        >
+          Rate Limit: 
+          10
+        </span>
+        <span
+          className="u-pull-right"
+        >
+          Refresh Timer: 
+          0
+        </span>
+      </div>
+      <div
+        className="react-autosuggest__container"
+      >
+        <input
+          aria-activedescendant={null}
+          aria-autocomplete="list"
+          aria-expanded={false}
+          aria-haspopup={false}
+          aria-owns="react-autowhatever-1"
+          autoComplete="off"
+          className="react-autosuggest__input"
+          disabled={false}
+          onBlur={[Function]}
+          onChange={[Function]}
+          onFocus={[Function]}
+          onKeyDown={[Function]}
+          placeholder="Type to search.."
+          role="combobox"
+          type="text"
+          value=""
+        />
+        <div
+          className="react-autosuggest__suggestions-container"
+          id="react-autowhatever-1"
+        />
+      </div>
+      <div
+        className="error"
+      >
+        
+      </div>
+    </div>
+    <div
+      className="two columns"
+    >
+       
+    </div>
+  </div>
+</div>
+`;
