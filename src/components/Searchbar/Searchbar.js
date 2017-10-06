@@ -7,7 +7,7 @@ import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/observable/interval';
 import {search} from "../../services/search.service";
-import DataBank from "../../services/initial-data";
+import DataBank from "../../services/databank";
 
 
 const retrieveMatchingSuggestions = (value) => {
